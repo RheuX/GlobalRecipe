@@ -24,6 +24,7 @@ struct RecipeView: View {
                 try await viewModel.fetchRecipes()
             }
         }
+        .navigationTitle("Recipe Menu")
     }
 }
 
@@ -31,26 +32,35 @@ struct RecipeList: View {
     @State var recipeList: [RecipeData]
     
     var body: some View {
-        VStack {
-            List {
-                ForEach(recipeList, id: \.uuid) { recipe in
-                    HStack {
-                        AsyncImageView(imageURL: recipe.image_small)
-                        VStack(alignment: .leading) {
-                            //Title
-                            Text("\(recipe.name)")
-                            //Coutry of Origin
-                            Text("\(recipe.cuisine)")
-                            
-                            HStack {
-                                Spacer()
-                                SourceView()
-                            }
+        List {
+            ForEach(recipeList, id: \.uuid) { recipe in
+                HStack(spacing: 8) {
+                    //Async Image
+                    AsyncImageView(imageURL: recipe.image_small)
+                    VStack(alignment: .leading) {
+                        //Title
+                        Text("\(recipe.name)")
+                            .font(.headline)
+                            .padding(.bottom, 4)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.5)
+                        
+                        //Dish Coutry of Origin
+                        Text("\(recipe.cuisine)")
+                            .font(.body)
+                            .fontWeight(.light)
+                            .italic()
+                            .foregroundColor(.secondary)
+                        
+                        HStack {
+                            Spacer() //Pushing SourceView into the right side
+                            SourceView(sourceURL: recipe.source_url, youtubeURL: recipe.youtube_url)
                         }
                     }
                 }
             }
         }
+        .listStyle(PlainListStyle())
     }
 }
 
@@ -77,10 +87,27 @@ struct AsyncImageView: View {
 }
 
 struct SourceView: View {
+    @State var sourceURL: String?
+    @State var youtubeURL: String?
     
     var body: some View {
-        Image(systemName: "globe")
-        Image(systemName: "play.rectangle.fill")
+        if let sourceURL = sourceURL, let url = URL(string: sourceURL) {
+            Link(destination: url) {
+                Image(systemName: "globe")
+            }
+        } else {
+            Image(systemName: "globe")
+                .opacity(0.5)
+        }
+        if let youtubeURL = youtubeURL, let url = URL(string: youtubeURL) {
+            Link(destination: url) {
+                Image(systemName: "play.rectangle.fill")
+            }
+        } else {
+            Image(systemName: "play.rectangle.fill")
+                .opacity(0.5)
+        }
+        
     }
 }
 
