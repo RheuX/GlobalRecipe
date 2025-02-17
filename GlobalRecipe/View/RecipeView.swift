@@ -24,7 +24,6 @@ struct RecipeView: View {
                 try await viewModel.fetchRecipes()
             }
         }
-        .navigationTitle("Recipe Menu")
     }
 }
 
@@ -41,7 +40,6 @@ struct RecipeList: View {
                         //Title
                         Text("\(recipe.name)")
                             .font(.headline)
-                            .padding(.bottom, 4)
                             .lineLimit(1)
                             .minimumScaleFactor(0.5)
                         
@@ -56,6 +54,7 @@ struct RecipeList: View {
                             Spacer() //Pushing SourceView into the right side
                             SourceView(sourceURL: recipe.source_url, youtubeURL: recipe.youtube_url)
                         }
+                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -90,24 +89,35 @@ struct SourceView: View {
     @State var sourceURL: String?
     @State var youtubeURL: String?
     
+    let imageSize: CGFloat = 20
+    
     var body: some View {
-        if let sourceURL = sourceURL, let url = URL(string: sourceURL) {
-            Link(destination: url) {
+        HStack(spacing: 12) {
+            if let sourceURL = sourceURL, let url = URL(string: sourceURL) {
+                Link(destination: url) {
+                    Image(systemName: "globe")
+                        .resizable()
+                        .frame(width: imageSize, height: imageSize)
+                }
+            } else {
                 Image(systemName: "globe")
+                    .resizable()
+                    .frame(width: imageSize, height: imageSize)
+                    .opacity(0.5)
             }
-        } else {
-            Image(systemName: "globe")
-                .opacity(0.5)
-        }
-        if let youtubeURL = youtubeURL, let url = URL(string: youtubeURL) {
-            Link(destination: url) {
+            if let youtubeURL = youtubeURL, let url = URL(string: youtubeURL) {
+                Link(destination: url) {
+                    Image(systemName: "play.rectangle.fill")
+                        .resizable()
+                        .frame(width: imageSize, height: imageSize-4)
+                }
+            } else {
                 Image(systemName: "play.rectangle.fill")
+                    .resizable()
+                    .frame(width: imageSize+8, height: imageSize-4)
+                    .opacity(0.5)
             }
-        } else {
-            Image(systemName: "play.rectangle.fill")
-                .opacity(0.5)
         }
-        
     }
 }
 

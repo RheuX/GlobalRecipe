@@ -10,7 +10,11 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         NavigationStack {
-            RecipeView()
+            VStack {
+                RecipeView()
+            }
+            .navigationTitle("Recipe Menu")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 }
