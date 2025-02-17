@@ -42,26 +42,29 @@ struct RecipeList: View {
     var body: some View {
         List {
             ForEach(recipeList, id: \.uuid) { recipe in
-                HStack(spacing: 8) {
-                    //Async Image
-                    AsyncImageView(imageURL: recipe.image_small)
-                    VStack(alignment: .leading) {
-                        //Title
-                        Text("\(recipe.name)")
-                            .font(.headline)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.5)
-                        
-                        //Dish Coutry of Origin
-                        Text("\(recipe.cuisine)")
-                            .font(.body)
-                            .fontWeight(.light)
-                            .italic()
-                            .foregroundColor(.secondary)
-                        
-                        HStack {
-                            Spacer() //Pushing SourceView into the right side
-                            SourceView(sourceURL: recipe.source_url, youtubeURL: recipe.youtube_url)
+                NavigationLink(destination: RecipeDetailView(recipe: recipe)) {
+                    HStack(spacing: 8) {
+                        //Async Image
+                        AsyncImageView(imageURL: recipe.image_small)
+                        VStack(alignment: .leading) {
+                            //Title
+                            Text("\(recipe.name)")
+                                .font(.headline)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.5)
+                            
+                            //Dish Coutry of Origin
+                            Text("\(recipe.cuisine)")
+                                .font(.body)
+                                .fontWeight(.light)
+                                .italic()
+                                .foregroundColor(.secondary)
+                            
+                            HStack {
+                                Spacer() //Pushing SourceView into the right side
+                                SourceView(sourceURL: recipe.source_url, youtubeURL: recipe.youtube_url)
+                            }
+                            .padding(.trailing, 8)
                         }
                         .buttonStyle(.plain)
                     }
@@ -74,22 +77,32 @@ struct RecipeList: View {
 
 struct AsyncImageView: View {
     @State var imageURL: String?
+    @State var shouldLoad: Bool = false
     
     var body: some View {
-        if let url = URL(string: imageURL ?? "") {
-            AsyncImage(url: url) { phase in
-                if let image = phase.image {
-                    image
+        VStack {
+            if shouldLoad {
+                if let url = URL(string: imageURL ?? "") {
+                    AsyncImage(url: url) { phase in
+                        if let image = phase.image {
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        }
+                    }
+                    .frame(width: 75, height: 75)
+                    .padding(2)
+                } else {
+                    Image(systemName: "photo")
                         .resizable()
-                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 50, height: 50)
                 }
+            } else {
+                Color.clear.frame(width: 75, height: 75)
             }
-            .frame(width: 75, height: 75)
-            .padding(2)
-        } else {
-            Image(systemName: "photo")
-                .resizable()
-                .frame(width: 50, height: 50)
+        }
+        .onAppear {
+            shouldLoad = true
         }
     }
 }
@@ -112,7 +125,7 @@ struct SourceView: View {
                 Image(systemName: "globe")
                     .resizable()
                     .frame(width: imageSize, height: imageSize)
-                    .opacity(0.5)
+                    .opacity(0.2)
             }
             if let youtubeURL = youtubeURL, let url = URL(string: youtubeURL) {
                 Link(destination: url) {
@@ -124,7 +137,7 @@ struct SourceView: View {
                 Image(systemName: "play.rectangle.fill")
                     .resizable()
                     .frame(width: imageSize, height: imageSize-4)
-                    .opacity(0.5)
+                    .opacity(0.2)
             }
         }
     }

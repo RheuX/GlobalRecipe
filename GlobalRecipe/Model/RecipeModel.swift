@@ -5,6 +5,8 @@
 //  Created by Axel Lorens on 2/16/25.
 //
 
+import Foundation
+
 struct RecipeModel: Decodable {
     let recipes: [RecipeData]
 }
@@ -22,5 +24,13 @@ struct RecipeData: Decodable {
         case cuisine, name, source_url, uuid, youtube_url
         case image_large = "photo_url_large"
         case image_small = "photo_url_small"
+    }
+}
+
+class RecipeWrapper: NSObject {
+    let model: [RecipeData]
+    
+    init(model: [RecipeData]) {
+        self.model = model
     }
 }
