@@ -24,6 +24,17 @@ final class GlobalRecipeTests: XCTestCase {
         mockService = nil
         viewModel = nil
     }
+    
+    func mockFetch() async {
+        let expectation = XCTestExpectation(description: "Fetch recipes")
+        
+        Task {
+            try await viewModel.fetchRecipes()
+            expectation.fulfill()
+        }
+        
+        await fulfillment(of: [expectation], timeout: 10)
+    }
 
     func testFetchRecipes_Success() async throws {
         mockService.jsonString = """
@@ -51,14 +62,7 @@ final class GlobalRecipeTests: XCTestCase {
         }
         """
         
-        let expectation = XCTestExpectation(description: "Fetch recipes")
-        
-        Task {
-            try await viewModel.fetchRecipes()
-            expectation.fulfill()
-        }
-        
-        await fulfillment(of: [expectation], timeout: 10)
+        await mockFetch()
         
         XCTAssertEqual(viewModel.recipes.count, 2, "Recipes should include 2 dishes")
         XCTAssertEqual(viewModel.recipes.first?.name, "Apam Balik", "First dish should be Apam Balik")
@@ -72,14 +76,7 @@ final class GlobalRecipeTests: XCTestCase {
         }
         """
         
-        let expectation = XCTestExpectation(description: "Fetch recipes")
-        
-        Task {
-            try await viewModel.fetchRecipes()
-            expectation.fulfill()
-        }
-        
-        await fulfillment(of: [expectation], timeout: 10)
+        await mockFetch()
         
         XCTAssertEqual(viewModel.recipes.count, 0, "Recipes should be empty")
         XCTAssertTrue(viewModel.errorMessage.isEmpty, "Error message should be empty")
@@ -110,18 +107,97 @@ final class GlobalRecipeTests: XCTestCase {
         }
         """
         
-        let expectation = XCTestExpectation(description: "Fetch recipes")
-        
-        
-        Task {
-            try await viewModel.fetchRecipes()
-            expectation.fulfill()
-        }
-        
-        await fulfillment(of: [expectation], timeout: 10)
+        await mockFetch()
         
         XCTAssertEqual(viewModel.recipes.count, 0, "Recipes should be empty")
         XCTAssertEqual(viewModel.errorMessage, "API response is missing required keys!", "Error message should be equal for `key not found`")
+    }
+    
+    func testFetchRecipes_Caching_Success() async throws {
+        mockService.jsonString = """
+        {
+            "recipes": [
+                    {
+                        "cuisine": "Malaysian",
+                        "name": "Apam Balik",
+                        "uuid": "0c6ca6e7-e32a-4053-b824-1dbf749910d8",
+                    },
+                    {
+                        "cuisine": "British",
+                        "name": "Apple and Blackberry Crumble",
+                        "uuid": "599344f4-3c5c-4cca-b914-2210e3b3312f",
+                    },
+            ]
+        }
+        """
+        
+        await mockFetch()
+        
+        XCTAssertEqual(viewModel.recipes.count, 2, "Recipes should include 2 dishes")
+        XCTAssertEqual(viewModel.recipes.first?.name, "Apam Balik", "First dish should be Apam Balik")
+        XCTAssertTrue(viewModel.errorMessage.isEmpty, "Error message should be empty")
+        XCTAssertFalse(mockService.useCached, "Should be false, since we never used a cached, we decode from JSON")
+        
+        //assuming we fetch with the same information
+        await mockFetch()
+        
+        XCTAssertTrue(mockService.useCached, "Should be true, since we used a cached, we decode from JSON")
+        XCTAssertEqual(viewModel.recipes.count, 2, "Recipes should include 2 dishes")
+    }
+    
+    func testFetchRecipes_2_Fetch() async throws {
+        mockService.jsonString = """
+        {
+            "recipes": [
+                    {
+                        "cuisine": "Malaysian",
+                        "name": "Apam Balik",
+                        "uuid": "0c6ca6e7-e32a-4053-b824-1dbf749910d8",
+                    },
+                    {
+                        "cuisine": "British",
+                        "name": "Apple and Blackberry Crumble",
+                        "uuid": "599344f4-3c5c-4cca-b914-2210e3b3312f",
+                    },
+            ]
+        }
+        """
+        
+        await mockFetch()
+        
+        XCTAssertEqual(viewModel.recipes.count, 2, "Recipes should include 2 dishes")
+        XCTAssertEqual(viewModel.recipes.first?.name, "Apam Balik", "First dish should be Apam Balik")
+        XCTAssertTrue(viewModel.errorMessage.isEmpty, "Error message should be empty")
+        XCTAssertFalse(mockService.useCached, "Should be false, since we never used a cached, we decode from JSON")
+        
+        mockService.jsonString = """
+        {
+            "recipes": [
+                    {
+                        "cuisine": "Malaysian",
+                        "name": "Apam Balik",
+                        "uuid": "0c6ca6e7-e32a-4053-b824-1dbf749910d8",
+                    },
+                    {
+                        "cuisine": "Canadian",
+                        "name": "BeaverTails",
+                        "uuid": "599344f4-3c5c-4cca-b914-2210e3b3312f",
+                    },
+                    {
+                        "cuisine": "British",
+                        "name": "Bakewell Tart",
+                        "uuid": "599344f4-3c5c-4cca-b914-2210e3b3312f",
+                    },
+            ]
+        }
+        """
+        
+        //assuming we fetch with the different information
+        await mockFetch()
+        
+        XCTAssertFalse(mockService.useCached, "Should be false, since hashed should be difference due to different of informatino")
+        XCTAssertEqual(viewModel.recipes.last?.name, "Bakewell Tart", "Last dish should be Bakewell Tart")
+        XCTAssertEqual(viewModel.recipes.count, 3, "Recipes should include 3 dishes")
     }
 }
 

@@ -29,6 +29,7 @@ class RecipeService: RecipeServiceProtocol {
         }
         
         let decodedData = try JSONDecoder().decode(RecipeModel.self, from: data)
+        
         storeData(hashedValue(data))
         print("Finished Fetching New Recipe")
         self.cache.setObject(RecipeWrapper(model: decodedData.recipes), forKey: "cachedRecipe")
