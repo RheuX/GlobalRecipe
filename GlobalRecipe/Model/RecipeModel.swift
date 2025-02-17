@@ -12,8 +12,8 @@ struct RecipeModel: Decodable {
 struct RecipeData: Decodable {
     let cuisine: String
     let name: String
-    let image_large: String
-    let image_small: String
+    let image_large: String?
+    let image_small: String?
     let source_url: String?
     let uuid: String
     let youtube_url: String?

@@ -12,11 +12,20 @@ struct RecipeView: View {
     
     var body: some View {
         VStack {
-            if viewModel.recipes.isEmpty {
+            if viewModel.isLoading {
                 ProgressView()
                 Text("Loading Recipes...")
             } else {
-                RecipeList(recipeList: viewModel.recipes)
+                if viewModel.recipes.isEmpty {
+                    Text("No Recipes Found")
+                    if !viewModel.errorMessage.isEmpty {
+                        Text("Error: \(viewModel.errorMessage)")
+                            .font(.caption)
+                            .padding()
+                    }
+                } else {
+                    RecipeList(recipeList: viewModel.recipes)
+                }
             }
         }
         .onAppear {
@@ -64,10 +73,10 @@ struct RecipeList: View {
 }
 
 struct AsyncImageView: View {
-    @State var imageURL: String = ""
+    @State var imageURL: String?
     
     var body: some View {
-        if let url = URL(string: imageURL) {
+        if let url = URL(string: imageURL ?? "") {
             AsyncImage(url: url) { phase in
                 if let image = phase.image {
                     image
@@ -114,7 +123,7 @@ struct SourceView: View {
             } else {
                 Image(systemName: "play.rectangle.fill")
                     .resizable()
-                    .frame(width: imageSize+8, height: imageSize-4)
+                    .frame(width: imageSize, height: imageSize-4)
                     .opacity(0.5)
             }
         }
