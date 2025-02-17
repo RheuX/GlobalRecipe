@@ -42,9 +42,61 @@ final class GlobalRecipeTests: XCTestCase {
                        uuid: "599344f4-3c5c-4cca-b914-2210e3b3312f",
                        youtube_url: "https://www.youtube.com/watch?v=4vhcOwVBDO4")
         ]
-        try await viewModel.fetchRecipes()
-        print(viewModel.recipes)
+        
+        let expectation = XCTestExpectation(description: "Fetch recipes")
+        
+        Task {
+            try await viewModel.fetchRecipes()
+            expectation.fulfill()
+        }
+        
+        await fulfillment(of: [expectation], timeout: 10)
+        
         XCTAssertEqual(viewModel.recipes.count, 2, "Recipes should include 2 dishes")
+        XCTAssertEqual(viewModel.recipes.first?.name, "Apam Balik", "First dish should be Apam Balik")
+        XCTAssertEqual(viewModel.errorMessage, "", "Error message should be empty")
     }
 
+    func testFetchRecipes_Empty() async {
+        mockService.mockRecipeData = []
+        
+        let expectation = XCTestExpectation(description: "Fetch recipes")
+        
+        Task {
+            try await viewModel.fetchRecipes()
+            expectation.fulfill()
+        }
+        
+        await fulfillment(of: [expectation], timeout: 10)
+        
+        XCTAssertEqual(viewModel.recipes.count, 0, "Recipes should be empty")
+        XCTAssertEqual(viewModel.errorMessage, "", "Error message should be empty")
+    }
+    
+    func testFetchRecipes_Malformed() async {
+        let missingKey = TestCodingKey(stringValue: "name")!
+        //assuming that a key was not found, let's assume that the name was not found
+        mockService.error = DecodingError.keyNotFound(
+            missingKey,
+            DecodingError.Context(
+                codingPath: [],
+                debugDescription: "The key 'name' was not found."
+            )
+        )
+        
+        let expectation = XCTestExpectation(description: "Fetch recipes")
+        
+        
+        Task {
+            try await viewModel.fetchRecipes()
+            expectation.fulfill()
+        }
+        
+        await fulfillment(of: [expectation], timeout: 10)
+        
+        XCTAssertEqual(viewModel.recipes.count, 0, "Recipes should be empty")
+        XCTAssertEqual(viewModel.errorMessage, "API response is missing required keys!", "Error message should be equal for `key not found`")
+    }
 }
+
+

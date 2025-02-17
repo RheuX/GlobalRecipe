@@ -37,12 +37,12 @@ class RecipeViewModel: ObservableObject {
             print("Data corrupted: \(context)")
         }
         catch let DecodingError.keyNotFound(key, context) {
-            updateErrorMessage("API response is missing required fields!")
+            updateErrorMessage("API response is missing required keys!")
             print("Key '\(key)' not found:", context.debugDescription)
             print("Coding Path:", context.codingPath)
         }
         catch let DecodingError.valueNotFound(value, context) {
-            updateErrorMessage("API response is missing required fields!")
+            updateErrorMessage("API response is missing required values!")
             print("Value '\(value)' not found:", context.debugDescription)
             print("Coding Path:", context.codingPath)
         } catch {
