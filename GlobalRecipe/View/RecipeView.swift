@@ -24,7 +24,7 @@ struct RecipeView: View {
                             .padding()
                     }
                 } else {
-                    RecipeList(recipeList: viewModel.recipes)
+                    RecipeList(recipeList: viewModel.recipes, viewModel: viewModel)
                 }
             }
         }
@@ -38,37 +38,41 @@ struct RecipeView: View {
 
 struct RecipeList: View {
     @State var recipeList: [RecipeData]
+    @State var viewModel: RecipeViewModel
     
     var body: some View {
         List {
             ForEach(recipeList, id: \.uuid) { recipe in
-                NavigationLink(destination: RecipeDetailView(recipe: recipe)) {
-                    HStack(spacing: 8) {
-                        //Async Image
-                        AsyncImageView(imageURL: recipe.image_small)
-                        VStack(alignment: .leading) {
-                            //Title
-                            Text("\(recipe.name)")
-                                .font(.headline)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.5)
-                            
-                            //Dish Coutry of Origin
-                            Text("\(recipe.cuisine)")
-                                .font(.body)
-                                .fontWeight(.light)
-                                .italic()
-                                .foregroundColor(.secondary)
-                            
-                            HStack {
-                                Spacer() //Pushing SourceView into the right side
-                                SourceView(sourceURL: recipe.source_url, youtubeURL: recipe.youtube_url)
-                            }
-                            .padding(.trailing, 8)
+                HStack(spacing: 8) {
+                    //Async Image
+                    AsyncImageView(imageURL: recipe.image_small)
+                    VStack(alignment: .leading) {
+                        //Title
+                        Text("\(recipe.name)")
+                            .font(.headline)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.5)
+                        
+                        //Dish Coutry of Origin
+                        Text("\(recipe.cuisine)")
+                            .font(.body)
+                            .fontWeight(.light)
+                            .italic()
+                            .foregroundColor(.secondary)
+                        
+                        HStack {
+                            Spacer() //Pushing SourceView into the right side
+                            SourceView(sourceURL: recipe.source_url, youtubeURL: recipe.youtube_url)
                         }
-                        .buttonStyle(.plain)
+                        .padding(.trailing, 8)
                     }
+                    .buttonStyle(.plain)
                 }
+            }
+        }
+        .refreshable {
+            Task {
+                try await viewModel.fetchRecipes()
             }
         }
         .listStyle(PlainListStyle())
